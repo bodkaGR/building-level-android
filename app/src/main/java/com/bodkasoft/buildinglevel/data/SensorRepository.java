@@ -2,14 +2,15 @@ package com.bodkasoft.buildinglevel.data;
 
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
+import com.bodkasoft.buildinglevel.data.listener.LevelSensorListener;
 
 public class SensorRepository {
     private final SensorManager sensorManager;
     private final Sensor accelerometer;
-    private SensorCallback callback;
+    private SensorEventListener listener;
 
     public SensorRepository(Context context) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -17,30 +18,14 @@ public class SensorRepository {
     }
 
     public void startListening(SensorCallback callback) {
-        this.callback = callback;
+        listener = new LevelSensorListener(callback);
         sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_UI);
     }
 
     public void stopListening() {
-        sensorManager.unregisterListener(listener);
-    }
-
-    private final SensorEventListener listener = new SensorEventListener() {
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            if (callback != null) {
-                float axisX = event.values[0];
-                float axisY = event.values[1];
-
-                callback.onAngleChanged(axisX, axisY);
-            }
+        if (listener != null) {
+            sensorManager.unregisterListener(listener);
+            listener = null;
         }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-    };
-
-    public interface SensorCallback {
-        void onAngleChanged(float x, float y);
     }
 }
